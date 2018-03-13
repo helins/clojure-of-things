@@ -248,6 +248,17 @@ console and find out which address it is :
 $ ip route
 ```
 
+### Remote management
+
+[Ansible](https://www.ansible.com/) is an administration tool used for managing
+servers using declarative configuration files. It leverages SSH and hosts do not
+require any setup. A machine can actually manage itself and this can be used as
+a remote update mechanism. A Raspberry Pi can indeed be prepared for
+periodically fetching configuration files via FTP or by any other mean and then
+use Ansible on itself. An alternative similar solution would be to take
+advantage of
+[ansible-pull](http://docs.ansible.com/ansible/latest/ansible-pull.html).
+
 ### Serial port
 
 Talking via the serial port from the JVM has always been a bit burdensome.
