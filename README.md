@@ -1,6 +1,6 @@
 # Running Clojure on the Raspberry Pi
 
-## Rationale
+## 1. Rationale
 
 Dynamic languages have gradually become prominent for building more or less
 smart devices. The Raspberry Pi is a perfect example of cheap but powerful
@@ -10,7 +10,7 @@ Clojure and provides various how-to's. It aims to be accessible to people
 familiar with Clojure and the Raspberry Pi ecosystem while remaining
 beginner friendly.
 
-### Asynchronous programming
+### 1.1. Asynchronous programming
 
 The smarter the device and the more asynchronous its behavior will be. Clojure
 provides strong concurrency primitives as well as the excellent
@@ -26,7 +26,7 @@ importance of loosely coupled modules talking via
 Using Clojure, arbitrarly complex programs can be written by composing modules
 exchanging data asynchronously.
 
-### Unified development
+### 1.2. Unified development
 
 Clojure targets Java as well as Javascript and code can be shared between
 platforms. This result in a unique experience of trully [writting once and
@@ -49,7 +49,7 @@ which means that not much is then needed for testing the field devices, or
 anything in the system, by feeding valid and unvalid data. Much bugs usually
 discovered in production can be uncover using this method.
 
-## Running Java
+## 2. Choosing and installing a JVM
 
 As of today, the three main fully-fledged Java 8 environments supported by the
 Raspberry Pi are :
@@ -84,7 +84,7 @@ $ java -version
 
 Java 9 is net yet supported by Azul Systems but it is probably a matter of time.
 
-## Configuring IO
+## 3. Configuring IO
 
 There are no special requirements for using GPIO, I2C or SPI. Nonetheless,
 regardless of Clojure, the serial port behaves oddly on the Raspberry Pi 3. Many
@@ -117,7 +117,7 @@ After a reboot, the serial port will be accessible at __/dev/ttyAMA0__ just like
 on prior Raspberry Pi models. Read more about this matter
 [here](https://www.raspberrypi.org/documentation/configuration/uart.md).
 
-## Leiningen
+## 4. Leiningen
 
 [Leiningen](https://leiningen.org/) is installed as usual. Starting a REPL is
 usually slow, much slower than on a desktop and the process might timeout. This
@@ -131,7 +131,7 @@ Once the REPL is launched and everything is compiled, it behaves as usual. For
 production, projects can be compiled on a development machine rather than on the
 Raspberry Pi itself.
 
-## Development via SSH
+## 5. Development via SSH
 
 While it is possible to write code on the Raspberry Pi, it is probably no
 replacement to your desktop environment. The easiest way is to keep everything
@@ -150,7 +150,7 @@ $ lein repl :start :host 0.0.0.0 :port 4000
 The rest is just traditional Clojure development of connecting your text
 editor/IDE to the REPL and doing wonders.
 
-## Optimizing uberjars
+## 6. Optimizing uberjars
 
 For better performance and faster boot time, it is best for the user to be
 acquainted with the [compilation](https://clojure.org/reference/compilation)
@@ -158,25 +158,25 @@ processs and its various options. This is true for any environment but become
 more relevant for the Raspberry Pi as it is much more limited than a desktop
 computer or a server.
 
-## Recommended libraries
+## 7. Recommended libraries
 
-### Miscellaneous
+### 7.1. Miscellaneous
 
-#### Logging
+#### 7.1.1. Logging
 
 There are a few logging libraries for Clojure but the most widely used and
 recommended one is [Timbre](https://github.com/ptaoussanis/timbre). It is fairly
 easy to write log appenders and be up and running in minutes.
 
-#### Modules
+#### 7.1.2. Modules
 
 Complex programs are often modular and it is easier to extend modular programs.
 We recommend [Integrant](https://github.com/weavejester/integrant), a great
 micro-framework for writing modules, connecting them and managing them.
 
-### IO
+### 7.2. IO
 
-#### GPIO
+#### 7.2.1. GPIO
 
 The main library for using the GPIO pins from Java is [PI4J](http://pi4j.com/).
 It is mainly built upon [wiringPi](http://wiringpi.com/), a renowned C library.
@@ -191,7 +191,7 @@ failure. Indeed, it led to unexpected segfaults and early terminations for
 unknown reasons. This problem occured in other Java projects and also happens
 with [JNI](https://en.wikipedia.org/wiki/Java_Native_Interface) bindings.
 
-#### I2C
+#### 7.2.2. I2C
 
 [dvlopt.i2c](https://github.com/dvlopt/i2c) is the only Clojure library
 fortalking to I2C slave devices. Here are current sub-libraries targeting
@@ -203,7 +203,7 @@ specific sensors and devices :
   converter.
 - [mcp342x](https://github.com/dvlopt/i2c.mcp342x), a family of A/D converters.
 
-#### Meter-Bus
+#### 7.2.3. Meter-Bus
 
 [JMbus](https://www.openmuc.org/m-bus/) is the only stable and actively
 maintained Java library for talking to Meter-Bus slaves, typically meters. It
@@ -213,7 +213,7 @@ requires Meter-bus converters such as those provided by
 [dvlopt.mbus](https://github.com/dvlopt/mbus) is a Clojure wrapper around JMbus.
 As of today, it supports Meter-Bus via the serial port and TCP/IP.
 
-#### Serial port
+#### 7.2.4. Serial port
 
 Talking via the serial port from the JVM has always been a bit burdensome.
 [Purejavacomm](https://github.com/nyholku/purejavacomm) aims to provide a
@@ -222,15 +222,15 @@ multi-platform compatibility without any prior installation of native libraries.
 To our knowledge, [Clj-serial](https://github.com/peterschwarz/clj-serial) is
 the only Clojure wrapper for Purejavacomm.
 
-#### SPI
+#### 7.2.5. SPI
 
 We haven't managed to find any Java library for talking to SPI slaves. The only
 existing Clojure library is [dvlopt.spi](https://github.com/dvlopt/spi) which is
 rather an experiment for the time being. For the time being, refer to PI4J.
 
-### Networking
+### 7.3. Networking
 
-### HTTP and websockets
+#### 7.3.1. HTTP and websockets
 
 Raspberry Pies are often used for running small HTTP servers.
 
@@ -240,7 +240,7 @@ asynchronous utilities for spinning up a server or performing requests as well
 as for executing requests. It offers great support for
 [websockets](https://en.wikipedia.org/wiki/WebSocket).
 
-### MQTT
+#### 7.3.2. MQTT
 
 [MQTT](https://en.wikipedia.org/wiki/MQTT) has become popular for internet of
 things projects for providing bidirectional communication organized around
@@ -254,12 +254,12 @@ ecosystem.
 [dvlopt.mqtt](https://github.com/dvlopt/mqtt) is a Clojure wrapper around the
 Paho library.
 
-## Recommended tools and practises
+## 8. Recommended tools and practises
 
-### Writing modular programs
+### 8.1. Writing modular programs
 
 Complex programs benefit from being modular in order to remain extensible.
-Networking and handling various IO's will result plenty in asynchronicity.
+Networking and handling various IO's will result in plenty of asynchronicity.
 Core.async can provide an pub/sub event bus and modules can subscribes to the
 needed topics and start the necessary goroutines. The event bus would in itself
 be a top-level module requested by all other participating modules.
@@ -274,7 +274,7 @@ is ready to work. This channel should deliver the signal once integrant returns,
 meaning that every module is ready and had the change to subscribe to the needed
 topics.
 
-### Network over 3G/4G
+### 8.2. Network over 3G/4G
 
 The [Huawei e3772](https://consumer.huawei.com/en/mobile-broadband/e3372/) USB
 4G dongle is recommended as it is supported by Raspbian and does not require any
@@ -291,7 +291,7 @@ terminal and find out which address it is :
 $ ip route
 ```
 
-### Remote management
+### 8.3. Remote management
 
 [Ansible](https://www.ansible.com/) is an administration tool used for managing
 servers using declarative configuration files. It leverages SSH and hosts do not
