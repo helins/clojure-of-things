@@ -23,10 +23,8 @@ Frameworks such as the [Robot Operating
 System](https://en.wikipedia.org/wiki/Robot_Operating_System) describe the
 importance of loosely coupled modules talking via
 [pub/sub](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern).
-Clojure can successfuly implement such a scheme within a single process via
-core.async. Several libraries/micro-frameworks exist for writing and managing
-modules. The strong support for information provided by the language makes it
-perfectly suitable for writing complex but extensible systems.
+Using Clojure, arbitrarly complex programs can be written by composing modules
+exchanging data asynchronously.
 
 ### Unified development
 
@@ -47,8 +45,8 @@ standard framework for data modeling. Typicaly, the robustness of field devices
 and the system they belong to is assessed by feeding test data for [fuzzy
 testing](https://en.wikipedia.org/wiki/Fuzzing). This is a laborious, error
 prone and unsatisfying process. Using Spec, data can be generated automatically,
-which means that not much is then needed for testing the field devices or
-anything in the system by feeding valid and unvalid data. Much bugs usually
+which means that not much is then needed for testing the field devices, or
+anything in the system, by feeding valid and unvalid data. Much bugs usually
 discovered in production can be uncover using this method.
 
 ## Running Java
@@ -103,8 +101,8 @@ applications. The solution is to choose an alternative [device
 tree](https://en.wikipedia.org/wiki/Device_tree) overlay in
 __/boot/config.txt__.
 
-This line device tree will swap bluetooth and the serial port, meaning
-bluetooth will run on mini UART, which might be enough :
+This line will swap bluetooth and the serial port, meaning bluetooth will run on
+mini UART, which might be enough or not at all :
 ```
 dtoverlay=pi3-miniuart-bt
 ```
@@ -129,8 +127,9 @@ is preventable by adding this option to the project file :
 {:repl-options {:timeout 180000}}  ;; 3 minutes for example
 ```
 
-Once the REPL is launched, it behaves as usual. Projects can be compiled on a
-development machine rather than on the Raspberry Pi itself.
+Once the REPL is launched and everything is compiled, it behaves as usual. For
+production, projects can be compiled on a development machine rather than on the
+Raspberry Pi itself.
 
 ## Development via SSH
 
@@ -148,7 +147,8 @@ The REPL can be made available to the local network by typing the following :
 $ lein repl :start :host 0.0.0.0 :port 4000
 ```
 
-The rest is just traditional Clojure development.
+The rest is just traditional Clojure development of connecting your text
+editor/IDE to the REPL and doing wonders.
 
 ## Optimizing uberjars
 
@@ -158,35 +158,43 @@ processs and its various options. This is true for any environment but become
 more relevant for the Raspberry Pi as it is much more limited than a desktop
 computer or a server.
 
-## Recommended libraries and practises
+## Recommended libraries
 
-### GPIO
+### Miscellaneous
+
+#### Logging
+
+There are a few logging libraries for Clojure but the most widely used and
+recommended one is [Timbre](https://github.com/ptaoussanis/timbre). It is fairly
+easy to write log appenders and be up and running in minutes.
+
+#### Modules
+
+Complex programs are often modular and it is easier to extend modular programs.
+We recommend [Integrant](https://github.com/weavejester/integrant), a great
+micro-framework for writing modules, connecting them and managing them.
+
+### IO
+
+#### GPIO
 
 The main library for using the GPIO pins from Java is [PI4J](http://pi4j.com/).
 It is mainly built upon [wiringPi](http://wiringpi.com/), a renowned C library.
 
 [pi4clj](https://github.com/dvlopt/pi4clj) is a thin Clojure wrapper for
-wiringPi using the stable JNI bindings from PI4J.
+wiringPi using the stable and time-proven native bindings from PI4J, discarding
+all the unnecessary Java boilerplate.
 
 Our attemps to provide [JNA](https://en.wikipedia.org/wiki/Java_Native_Access)
-bindings for PIGPIO resulted in an utter failure. Indeed, it led to unexpected
-segfaults and early terminations for unknown reasons. This problem occured in
-other Java projects and also happens with
-[JNI](https://en.wikipedia.org/wiki/Java_Native_Interface) bindings.
+bindings for [PIGPIO](https://github.com/joan2937/pigpio) resulted in an utter
+failure. Indeed, it led to unexpected segfaults and early terminations for
+unknown reasons. This problem occured in other Java projects and also happens
+with [JNI](https://en.wikipedia.org/wiki/Java_Native_Interface) bindings.
 
-### HTTP
+#### I2C
 
-Raspberry Pies are often used for running small HTTP servers.
-
-While there are quite few libraries for HTTP servers and clients, we recommend
-[Aleph](https://github.com/ztellman/aleph). It is a popular choice and provides
-asynchronous utilities for spinning up a server or performing requests. It
-offers great support for [websockets](https://en.wikipedia.org/wiki/WebSocket).
-
-### I2C
-
-[dvlopt.i2c](https://github.com/dvlopt/i2c) is the only way to talk to I2C slave
-devices from Clojure on the JVM. Here are current sub-libraries targeting
+[dvlopt.i2c](https://github.com/dvlopt/i2c) is the only Clojure library
+fortalking to I2C slave devices. Here are current sub-libraries targeting
 specific sensors and devices :
 
 - [bme280](https://github.com/dvlopt/i2c.bme280), a popular environment sensor
@@ -195,19 +203,7 @@ specific sensors and devices :
   converter.
 - [mcp342x](https://github.com/dvlopt/i2c.mcp342x), a family of A/D converters.
 
-### Logging
-
-There are a few logging libraries for Clojure but the most widely used and
-recommended one is [Timbre](https://github.com/ptaoussanis/timbre). It is fairly
-easy to write log appenders and be up and running in minutes.
-
-### Modules
-
-Complex programs are often modular and it is easier to extend modular programs.
-We recommend [Integrant](https://github.com/weavejester/integrant), a great
-micro-framework for writing modules, connecting them and managing them.
-
-### Meter-Bus
+#### Meter-Bus
 
 [JMbus](https://www.openmuc.org/m-bus/) is the only stable and actively
 maintained Java library for talking to Meter-Bus slaves, typically meters. It
@@ -216,6 +212,33 @@ requires Meter-bus converters such as those provided by
 
 [dvlopt.mbus](https://github.com/dvlopt/mbus) is a Clojure wrapper around JMbus.
 As of today, it supports Meter-Bus via the serial port and TCP/IP.
+
+#### Serial port
+
+Talking via the serial port from the JVM has always been a bit burdensome.
+[Purejavacomm](https://github.com/nyholku/purejavacomm) aims to provide a
+multi-platform compatibility without any prior installation of native libraries.
+
+To our knowledge, [Clj-serial](https://github.com/peterschwarz/clj-serial) is
+the only Clojure wrapper for Purejavacomm.
+
+#### SPI
+
+We haven't managed to find any Java library for talking to SPI slaves. The only
+existing Clojure library is [dvlopt.spi](https://github.com/dvlopt/spi) which is
+rather an experiment for the time being. For the time being, refer to PI4J.
+
+### Networking
+
+### HTTP and websockets
+
+Raspberry Pies are often used for running small HTTP servers.
+
+While there are quite few libraries for HTTP servers and clients, we recommend
+[Aleph](https://github.com/ztellman/aleph). It is a popular choice and provides
+asynchronous utilities for spinning up a server or performing requests as well
+as for executing requests. It offers great support for
+[websockets](https://en.wikipedia.org/wiki/WebSocket).
 
 ### MQTT
 
@@ -231,6 +254,26 @@ ecosystem.
 [dvlopt.mqtt](https://github.com/dvlopt/mqtt) is a Clojure wrapper around the
 Paho library.
 
+## Recommended tools and practises
+
+### Writing modular programs
+
+Complex programs benefit from being modular in order to remain extensible.
+Networking and handling various IO's will result plenty in asynchronicity.
+Core.async can provide an pub/sub event bus and modules can subscribes to the
+needed topics and start the necessary goroutines. The event bus would in itself
+be a top-level module requested by all other participating modules.
+
+However, when an integrant system is started, modules are initialized
+synchronous after resolving dependencies between them. If a module starts
+pushing values asynchronously on the event bus before other dependent modules
+are ready, the outcome will be data loss and inconsistency. Given this fact,
+modules producing values should wait a signal. In practise, besides the event
+bus should be a promise channel serving the purpose of signaling that the system
+is ready to work. This channel should deliver the signal once integrant returns,
+meaning that every module is ready and had the change to subscribe to the needed
+topics.
+
 ### Network over 3G/4G
 
 The [Huawei e3772](https://consumer.huawei.com/en/mobile-broadband/e3372/) USB
@@ -242,7 +285,7 @@ dongle active is to setup a CRON job for pinging google or anything else within
 the disconnect interval.
 
 The dongle runs a webserver accessible like a typical router. Run this in the
-console and find out which address it is :
+terminal and find out which address it is :
 
 ```
 $ ip route
@@ -258,18 +301,3 @@ periodically fetching configuration files via FTP or by any other mean and then
 use Ansible on itself. An alternative similar solution would be to take
 advantage of
 [ansible-pull](http://docs.ansible.com/ansible/latest/ansible-pull.html).
-
-### Serial port
-
-Talking via the serial port from the JVM has always been a bit burdensome.
-[Purejavacomm](https://github.com/nyholku/purejavacomm) aims to provide a
-multi-platform compatibility without any prior installation of native libraries.
-
-To our knowledge, [Clj-serial](https://github.com/peterschwarz/clj-serial) is
-the only Clojure wrapper for Purejavacomm.
-
-### SPI
-
-We haven't managed to find any Java library for talking to SPI slaves. The only
-existing Clojure library is [dvlopt.spi](https://github.com/dvlopt/spi) which is
-rather an experiment for the time being.
