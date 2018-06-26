@@ -1,14 +1,19 @@
 # Running Clojure on the Raspberry Pi
 
+[![Create Commons
+License](https://i.creativecommons.org/l/by-sa/4.0/88x31.png)](http://creativecommons.org/licenses/by-sa/4.0/)
+
+This work is licensed under a [Creative Commons Attribution-ShareAlike 4.0
+International License](http://creativecommons.org/licenses/by-sa/4.0/).
+
 ## 1. Rationale
 
 Dynamic languages have gradually become prominent for building more or less
 smart devices. The Raspberry Pi is a perfect example of cheap but powerful
-hardware used for building all sorts of devices. While Python and NodeJS are
-popular dynamic languages, this documentation explains the advantages of using
-Clojure and provides various how-to's. It aims to be accessible to people
-familiar with Clojure and the Raspberry Pi ecosystem while remaining
-beginner friendly.
+hardware used for building such of devices. While Python and NodeJS are popular
+dynamic languages, this documentation explains the advantages of using Clojure
+and provides various how-to's. It aims to be accessible to people familiar with
+Clojure and the Raspberry Pi ecosystem while remaining beginner friendly.
 
 ### 1.1. Asynchronous programming
 
@@ -41,7 +46,7 @@ valuable time saver.
 
 Clojure now ships [Spec](https://clojure.org/about/spec), a core library for
 describing, validading and generating data amongst other things. It provides a
-standard framework for data modeling. Typicaly, the robustness of field devices
+standard framework for data modeling. Typically, the robustness of field devices
 and the system they belong to is assessed by feeding test data for [fuzzy
 testing](https://en.wikipedia.org/wiki/Fuzzing). This is a laborious, error
 prone and unsatisfying process. Using Spec, data can be generated automatically,
@@ -178,30 +183,54 @@ micro-framework for writing modules, connecting them and managing them.
 
 #### 7.2.1. GPIO
 
-The main library for using the GPIO pins from Java is [PI4J](http://pi4j.com/).
-It is mainly built upon [wiringPi](http://wiringpi.com/), a renowned C library.
+The Raspberry Pi community often relies on either
+[wiringPi](http://wiringpi.com) or [PIGPIO](https://github.com/joan2937/pigpio),
+two common C libraries for handling GPIO lines among other things. Higher level
+languages often provide wrappers, specially for wiringPi. The main library for
+accessing wiringPi from Java is [PI4J](http://pi4j.com), although it is not
+actively maintained anymore. Any attempts (including our own) to provide
+bindings to PIGPIO resulted in an utter failure. For unknown reasons, sooner or
+later the JVM presents unexpected segfaults or early terminations, both when
+using [JNA](https://en.wikipedia.org/wiki/Java_Native_Access) and
+[JNI](https://en.wikipedia.org/wiki/Java_Native_Interface).
 
-[pi4clj](https://github.com/dvlopt/pi4clj) is a thin Clojure wrapper for
-wiringPi using the stable and time-proven native bindings from PI4J, discarding
-all the unnecessary Java boilerplate.
+In any case, those C underlying libraries directly write to /dev/mem or
+/dev/gpiomem. While this is fast, a number of problems arise. For instance,
+there is no automatic clean-up which means that if an application crashes for
+any reason, the state of the lines remains as is.
 
-Our attemps to provide [JNA](https://en.wikipedia.org/wiki/Java_Native_Access)
-bindings for [PIGPIO](https://github.com/joan2937/pigpio) resulted in an utter
-failure. Indeed, it led to unexpected segfaults and early terminations for
-unknown reasons. This problem occured in other Java projects and also happens
-with [JNI](https://en.wikipedia.org/wiki/Java_Native_Interface) bindings.
+A best approach would be to rely on a proper Linux driver. For years, driving
+lines has been done via the SysFS approach by exporting lines as files and then
+performing simple IO. Unfortunately, this was slow and presented the same kind
+of problems as writing directly to /dev/mem. The whole process was messy.
+
+Linux now offers a new API since version 4.18. Each GPIO chip is accessible as a
+char device. This new scheme is surprisingly fast, offers better support for
+interrupts as well as a number of other desirable features. For instance, lines
+need to be properly requested. A single handle can drive several lines at once
+and when it is released, whether on purpose or when the process terminates,
+lines go back to their initial state.
+
+The only java library built for this new API is
+[dvlopt/linux-gpio.java](https://github.com/dvlopt/linux-gpio.java). It serves
+as the basis for
+[dvlopt/linux.gpio.clj](https://github.com/dvlopt/linux.gpio.clj), a
+higher-level clojure wrapper. Furthermore, relying on a Linux utility means
+those libraries can run on any machine as they are not specific to the Raspberry
+Pi.
 
 #### 7.2.2. I2C
 
-[dvlopt.i2c](https://github.com/dvlopt/i2c) is the only Clojure library
-fortalking to I2C slave devices. Here are current sub-libraries targeting
-specific sensors and devices :
+[dvlopt/linux.i2c.clj](https://github.com/dvlopt/linux.i2c.clj) is the only
+Clojure library for talking to I2C slave devices. Here are current sub-libraries
+targeting specific sensors and devices :
 
-- [bme280](https://github.com/dvlopt/i2c.bme280), a popular environment sensor
-  built by Bosh.
-- [horter-i2hae](https://github.com/dvlopt/i2c.horter-i2hae), a simple A/D
+- [bme280](https://github.com/dvlopt/linux.i2c.bme280), a popular environment
+  sensor built by Bosh.
+- [horter-i2hae](https://github.com/dvlopt/linux.i2c.horter-i2hae), a simple A/D
   converter.
-- [mcp342x](https://github.com/dvlopt/i2c.mcp342x), a family of A/D converters.
+- [mcp342x](https://github.com/dvlopt/linux.i2c.mcp342x), a family of A/D
+  converters.
 
 #### 7.2.3. Meter-Bus
 
@@ -210,7 +239,7 @@ maintained Java library for talking to Meter-Bus slaves, typically meters. It
 requires Meter-bus converters such as those provided by
 [Solvimus](http://www.solvimus.de/en/).
 
-[dvlopt.mbus](https://github.com/dvlopt/mbus) is a Clojure wrapper around JMbus.
+[dvlopt/mbus](https://github.com/dvlopt/mbus) is a Clojure wrapper around JMbus.
 As of today, it supports Meter-Bus via the serial port and TCP/IP.
 
 #### 7.2.4. Serial port
@@ -218,15 +247,23 @@ As of today, it supports Meter-Bus via the serial port and TCP/IP.
 Talking via the serial port from the JVM has always been a bit burdensome.
 [Purejavacomm](https://github.com/nyholku/purejavacomm) aims to provide a
 multi-platform compatibility without any prior installation of native libraries.
-
 To our knowledge, [Clj-serial](https://github.com/peterschwarz/clj-serial) is
 the only Clojure wrapper for Purejavacomm.
 
+Historically, RXTX has been widely used for serial IO. The project is now
+discontinued. However, [openmuc/jrxtx](https://github.com/openmuc/jrxtx) aims to
+provide a replacement as well as a few improvements. The slight downside is that
+it requires the installation of native libraries. Because a lot of legacy
+projects (and a few present ones) relies on RXTX, this library might be
+preferable over purejavacomm. [dvlopt/rxtx](https://github.com/dvlopt/rxtx) is a
+simple to use clojure wrapper.
+
 #### 7.2.5. SPI
 
-We haven't managed to find any Java library for talking to SPI slaves. The only
-existing Clojure library is [dvlopt.spi](https://github.com/dvlopt/spi) which is
-rather an experiment for the time being. For the time being, refer to PI4J.
+Basic SPI utilities are proposed by the aforementioned PI4J library. To our
+knowledge, there is not any specific Java library.
+[dvlopt/spi](https://github.com/dvlopt/spi) is an attempt to provide bindings to
+the Linux API but remains a poorly documented experiment for the time being.
 
 ### 7.3. Networking
 
@@ -251,7 +288,7 @@ The [Paho MQTT Java client](https://github.com/eclipse/paho.mqtt.java) is
 probably the most active and well-maintained MQTT client library in the
 ecosystem.
 
-[dvlopt.mqtt](https://github.com/dvlopt/mqtt) is a Clojure wrapper around the
+[dvlopt/mqtt](https://github.com/dvlopt/mqtt) is a Clojure wrapper around the
 Paho library.
 
 ## 8. Recommended tools and practises
@@ -260,7 +297,7 @@ Paho library.
 
 Complex programs benefit from being modular in order to remain extensible.
 Networking and handling various IO's will result in plenty of asynchronicity.
-Core.async can provide an pub/sub event bus and modules can subscribes to the
+Core.async can provide a pub/sub event bus and modules can subscribes to the
 needed topics and start the necessary goroutines. The event bus would in itself
 be a top-level module requested by all other participating modules.
 
