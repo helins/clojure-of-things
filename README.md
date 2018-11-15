@@ -204,7 +204,7 @@ lines has been done via the SysFS approach by exporting lines as files and then
 performing simple IO. Unfortunately, this was slow and presented the same kind
 of problems as writing directly to /dev/mem. The whole process was messy.
 
-Linux now offers a new API since version 4.18. Each GPIO chip is accessible as a
+Linux now offers a new API since version 4.8. Each GPIO chip is accessible as a
 char device. This new scheme is surprisingly fast, offers better support for
 interrupts as well as a number of other desirable features. For instance, lines
 need to be properly requested. A single handle can drive several lines at once
