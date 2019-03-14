@@ -142,14 +142,17 @@ While it is possible to write code on the Raspberry Pi, it is probably no
 replacement to your desktop environment. The easiest way is to keep everything
 on your machine and use
 [SSHFS](https://www.digitalocean.com/community/tutorials/how-to-use-sshfs-to-mount-remote-file-systems-over-ssh)
-to mount the folder where the project resides on the Raspberry Pi in order to
-launch a REPL. Otherwise, it is possible to use [rsync](https://rsync.samba.org)
-and synchronize files everytime before starting the REPL.
+to mount the folder where the project resides on the Raspberry Pi. This allow
+for launching a REPL on the device without having to keep files locally.
+Otherwise, it is possible to use [rsync](https://rsync.samba.org) and
+synchronize files everytime before starting the REPL, but it is somewhat less
+efficient.
 
-The REPL can be made available to the local network by typing the following :
+The REPL can be made available to the local network by typing the following
+(where $PORT is your favorite port) :
 
 ```
-$ lein repl :start :host 0.0.0.0 :port 4000
+$ lein repl :start :host 0.0.0.0 :port $PORT
 ```
 
 The rest is just traditional Clojure development of connecting your text
@@ -159,7 +162,7 @@ editor/IDE to the REPL and doing wonders.
 
 For better performance and faster boot time, it is best for the user to be
 acquainted with the [compilation](https://clojure.org/reference/compilation)
-processs and its various options. This is true for any environment but become
+process and its various options. This is true for any environment but become
 more relevant for the Raspberry Pi as it is much more limited than a desktop
 computer or a server.
 
